@@ -1,3 +1,4 @@
+.history
 influxdb/data/
 
 # Ignore environment files that could contains seeds (credentials)

@@ -10,10 +10,7 @@ networks:
 
 services:
   indy-node-monitor:
-    build:
-      context: ./fetch-validator-status
-      dockerfile: ./Dockerfile
-    image: indy-node-monitor
+    image: ${DOCKER_REGISTRY_SERVER_URL}/indy-node-monitor-${ENVIONMENT}:latest
     volumes:
       - ./fetch-validator-status/plugins/:/home/indy/plugins/
       - ./fetch-validator-status/conf/:/home/indy/conf/
@@ -26,19 +23,14 @@ services:
       --web --verbose
 
   telegraf:
-    build:
-      context: ./images/telegraf/
-      dockerfile: ./${TYPE}/Dockerfile
-      args:
-        TELEGRAF_TAG: ${TELEGRAF_TAG}
-    image: telegraf
+    image: telegraf:latest
     env_file:
       - ${TELEGRAF_ENV}
     links:
       - influxdb
       - indy-node-monitor
     volumes:
-      - ./telegraf/:/etc/telegraf/
+      - ${WEBAPP_STORAGE_HOME}/telegraf/:/etc/telegraf/
     depends_on:
       - influxdb
       - indy-node-monitor
@@ -48,15 +40,10 @@ services:
       - node-monitor-net
 
   influxdb:
-    build:
-      context: ./images/influxdb/
-      dockerfile: ./${TYPE}/Dockerfile
-      args:
-        INFLUXDB_TAG: ${INFLUXDB_TAG}
-    image: influxdb
+    image: influxdb:latest
     volumes:
-      - ./influxdb/data:/var/lib/influxdb
-      - ./influxdb/config/:/etc/influxdb/
+      - ${WEBAPP_STORAGE_HOME}/influxdb/data:/var/lib/influxdb
+      - ${WEBAPP_STORAGE_HOME}/influxdb/config/:/etc/influxdb/
     ports:
       - "8086:8086"
       - "8082:8082"
@@ -67,8 +54,8 @@ services:
   prometheus:
     image: prom/prometheus
     volumes:
-      - ./prometheus/:/etc/prometheus/
-      - prometheus_data:/prometheus
+      - ${WEBAPP_STORAGE_HOME}/prometheus/:/etc/prometheus/
+      - ${WEBAPP_STORAGE_HOME}/prometheus/prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -89,7 +76,7 @@ services:
     ports:
       - 9093:9093
     volumes:
-      - "./alertmanager/:/etc/alertmanager/"
+      - "${WEBAPP_STORAGE_HOME}/alertmanager/:/etc/alertmanager/"
     networks:
       - node-monitor-net
     command:
@@ -97,20 +84,17 @@ services:
       - '--storage.path=/alertmanager'
 
   grafana:
-    build:
-      context: ./images/grafana/
-      dockerfile: ./Dockerfile
-      args:
-        GRAFANA_TAG: ${GRAFANA_TAG}
-    image: grafana
+    image: grafana/grafana:latest
     depends_on:
       - prometheus
       - influxdb
     ports:
       - 3000:3000
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-worldmap-panel
     volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ${WEBAPP_STORAGE_HOME}/grafana/grafana_data:/var/lib/grafana
+      - ${WEBAPP_STORAGE_HOME}/grafana/provisioning/:/etc/grafana/provisioning/
     env_file:
       - ${GRAFANA_ENV}
     networks:
