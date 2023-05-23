@@ -4,7 +4,7 @@ ADD requirements.txt .
 RUN pip3 install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-ADD networks.json .
-ADD *.py ./
+ADD ./fetch-validator-status/networks.json .
+ADD ./fetch-validator-status/*.py ./
 
 ENTRYPOINT ["bash", "-c", "python main.py $@", "--"]
