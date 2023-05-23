@@ -10,7 +10,7 @@ networks:
 
 services:
   indy-node-monitor:
-    image: ${DOCKER_REGISTRY_SERVER_URL}/indy-node-monitor-${ENVIONMENT}:latest
+    image: ${DOCKER_REGISTRY_SERVER_URL}/indy-node-monitor-${ENVIRONMENT}:latest
     volumes:
       - ./fetch-validator-status/plugins/:/home/indy/plugins/
       - ./fetch-validator-status/conf/:/home/indy/conf/
@@ -25,12 +25,12 @@ services:
   telegraf:
     image: telegraf:latest
     env_file:
-      - ${TELEGRAF_ENV}
+      - ./telegraf/.env-telegraf
     links:
       - influxdb
       - indy-node-monitor
     volumes:
-      - ${WEBAPP_STORAGE_HOME}/telegraf/:/etc/telegraf/
+      - ./telegraf/:/etc/telegraf/
     depends_on:
       - influxdb
       - indy-node-monitor
@@ -42,8 +42,8 @@ services:
   influxdb:
     image: influxdb:latest
     volumes:
-      - ${WEBAPP_STORAGE_HOME}/influxdb/data:/var/lib/influxdb
-      - ${WEBAPP_STORAGE_HOME}/influxdb/config/:/etc/influxdb/
+      - ./influxdb/data:/var/lib/influxdb
+      - ./influxdb/config/:/etc/influxdb/
     ports:
       - "8086:8086"
       - "8082:8082"
@@ -54,8 +54,8 @@ services:
   prometheus:
     image: prom/prometheus
     volumes:
-      - ${WEBAPP_STORAGE_HOME}/prometheus/:/etc/prometheus/
-      - ${WEBAPP_STORAGE_HOME}/prometheus/prometheus_data:/prometheus
+      - ./prometheus/:/etc/prometheus/
+      - ./prometheus/prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -93,10 +93,10 @@ services:
     environment:
       - GF_INSTALL_PLUGINS=grafana-worldmap-panel
     volumes:
-      - ${WEBAPP_STORAGE_HOME}/grafana/grafana_data:/var/lib/grafana
-      - ${WEBAPP_STORAGE_HOME}/grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
     env_file:
-      - ${GRAFANA_ENV}
+      - ./grafana/config.monitoring
     networks:
       - node-monitor-net
     links:
