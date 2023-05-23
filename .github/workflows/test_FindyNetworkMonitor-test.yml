@@ -33,4 +33,4 @@ jobs:
         with:
           push: true
           tags: ${{ secrets.ACR_REGISTRY }}/indy-node-monitor-test:latest
-          file: ./Dockerfile
+          file: ./fetch-validator-status/Dockerfile
