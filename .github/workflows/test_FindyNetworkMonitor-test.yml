@@ -27,23 +27,23 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: Build the indy node monitor image and push it to ACR
-        uses: docker/build-push-action@v2
-        with:
-          context: ./fetch-validator-status
-          push: true
-          tags: ${{ secrets.ACR_REGISTRY }}/indy-node-monitor-test:latest
-          file: ./fetch-validator-status/Dockerfile
+      # - name: Build the indy node monitor image and push it to ACR
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     context: ./fetch-validator-status
+      #     push: true
+      #     tags: ${{ secrets.ACR_REGISTRY }}/indy-node-monitor-test:latest
+      #     file: ./fetch-validator-status/Dockerfile
 
-      - name: Build the telegraf image and push it to ACR
-        uses: docker/build-push-action@v2
-        with:
-          context: ./
-          build-args: |
-            "TELEGRAF_TAG=latest"
-          push: true
-          tags: ${{ secrets.ACR_REGISTRY }}/telegraf-test:${{ github.sha }}
-          file: ./images/telegraf/latest/Dockerfile
+      # - name: Build the telegraf image and push it to ACR
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     context: ./
+      #     build-args: |
+      #       "TELEGRAF_TAG=latest"
+      #     push: true
+      #     tags: ${{ secrets.ACR_REGISTRY }}/telegraf-test:latest
+      #     file: ./images/telegraf/latest/Dockerfile
 
       - name: Build the influxdb image and push it to ACR
         uses: docker/build-push-action@v2
@@ -52,7 +52,7 @@ jobs:
           build-args: |
             "INFLUXDB_TAG=1.8"
           push: true
-          tags: ${{ secrets.ACR_REGISTRY }}/influxdb-test:${{ github.sha }}
+          tags: ${{ secrets.ACR_REGISTRY }}/influxdb-test:latest
           file: ./images/influxdb/latest/Dockerfile
 
       - name: Build the prometheus image and push it to ACR
@@ -60,7 +60,7 @@ jobs:
         with:
           context: ./
           push: true
-          tags: ${{ secrets.ACR_REGISTRY }}/prometheus-test:${{ github.sha }}
+          tags: ${{ secrets.ACR_REGISTRY }}/prometheus-test:latest
           images: prom/prometheus
 
       - name: Build the alertmanager image and push it to ACR
@@ -68,7 +68,7 @@ jobs:
         with:
           context: ./
           push: true
-          tags: ${{ secrets.ACR_REGISTRY }}/alertmanager-test:${{ github.sha }}
+          tags: ${{ secrets.ACR_REGISTRY }}/alertmanager-test:latest
           images: prom/alertmanager
 
       - name: Build the grafana image and push it to ACR
@@ -78,7 +78,7 @@ jobs:
           build-args: |
             "GRAFANA_TAG=latest"
           push: true
-          tags: ${{ secrets.ACR_REGISTRY }}/grafana-test:${{ github.sha }}
+          tags: ${{ secrets.ACR_REGISTRY }}/grafana-test:latest
           file: ./images/grafana/Dockerfile
 
       - name: "Deploy Indy Node Monitor to Azure Container Instances"
