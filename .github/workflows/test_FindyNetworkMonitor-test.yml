@@ -33,7 +33,7 @@ jobs:
           context: ./fetch-validator-status
           push: true
           tags: ${{ secrets.ACR_REGISTRY }}/indy-node-monitor-test:latest
-          file: ./Dockerfile
+          file: ./fetch-validator-status/Dockerfile
 
       - name: "Deploy Indy Node Monitor to Azure Container Instances"
         uses: "azure/aci-deploy@v1"
