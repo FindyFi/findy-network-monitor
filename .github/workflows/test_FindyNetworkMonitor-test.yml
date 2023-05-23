@@ -30,7 +30,7 @@ jobs:
       - name: Build the indy node monitor image and push it to ACR
         uses: docker/build-push-action@v2
         with:
-          context: /fetch-validator-status
+          context: ./fetch-validator-status
           push: true
           tags: ${{ secrets.ACR_REGISTRY }}/indy-node-monitor-test:latest
           file: ./Dockerfile
