@@ -39,8 +39,8 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./
-          build-contexts: |
-            TELEGRAF_TAG=latest
+          build-args: |
+            "TELEGRAF_TAG=latest"
           push: true
           tags: ${{ secrets.ACR_REGISTRY }}/telegraf-test:${{ github.sha }}
           file: ./images/telegraf/latest/Dockerfile
