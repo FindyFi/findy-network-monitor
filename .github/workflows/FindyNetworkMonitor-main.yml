@@ -1,4 +1,4 @@
-name: Deploy Findy network monitor to Test Environment
+name: Deploy Findy network monitor to Azure
 
 on:
   push:
