@@ -1,0 +1,733 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "findySeed": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "vnetName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "VNet name"
+            }
+        },
+        "vnetAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.1.0.0/16",
+            "metadata": {
+                "description": "Address prefix"
+            }
+        },
+        "subnet1AddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.1.2.0/24",
+            "metadata": {
+                "description": "Subnet prefix for ACI"
+            }
+        },
+        "subnet1Name": {
+            "type": "string",
+            "defaultValue": "aci-subnet",
+            "metadata": {
+                "description": "Subnet name for ACI"
+            }
+        },
+        "subnet2AddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.1.3.0/24",
+            "metadata": {
+                "description": "Subnet prefix for application gateway"
+            }
+        },
+        "subnet2Name": {
+            "type": "string",
+            "defaultValue": "ag-subnet",
+            "metadata": {
+                "description": "Subnet name for application gateway"
+            }
+        },
+        "storageAccountName": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "storageAccountKey": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "gfSecurityAdminPassword": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "gfUserAllowSignUp": {
+            "defaultValue": "false",
+            "type": "String"
+        },
+        "influxDBToken": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "imageRegistryLoginServer": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "imageUsername": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "imagePassword": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "location": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "grafanaContainerIp": {
+            "defaultValue": "10.1.2.6",
+            "type": "String"
+        },
+        "prometheusContainerIp": {
+            "defaultValue": "10.1.2.5",
+            "type": "String"
+        },
+        "metricsAndDBContainerIp": {
+            "defaultValue": "10.1.2.4",
+            "type": "String"
+        }
+    },
+    "variables": {
+        "interfaceConfigName": "eth0",
+        "interfaceIpConfig": "ipconfigprofile1",
+        "networkProfileName": "FindyTestMonitorNetworkProfile",
+        "grafanaContainerGroupName": "findytestmonitor-grafana",
+        "prometheusContainerGroupName": "findytestmonitor-prometheus",
+        "metricsAndDBContainerGroupName": "findytestmonitor-service-db",
+        "applicationGatewayName": "FindyTestMonitorApplicationGateway",
+        "publicIPAddressName": "FindyTestMonitorPublicIP",
+        "cpu": "1.0",
+        "memoryInGb": "1.0",
+        "skuName": "Standard_Medium",
+        "sku": "Standard",
+        "capacity": "2",
+        "subnet2Ref": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnet2Name'))]",
+        "publicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2020-05-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicIPAddressName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "findytestmonitor"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[parameters('vnetName')]",
+            "apiVersion": "2020-05-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('vnetAddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('subnet1Name')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnet1AddressPrefix')]",
+                            "serviceEndpoints": [
+                                {
+                                    "service": "Microsoft.Storage",
+                                    "locations": [
+                                        "[parameters('location')]"
+                                    ]
+                                }
+                            ],
+                            "delegations": [
+                                {
+                                    "name": "DelegationService",
+                                    "properties": {
+                                        "serviceName": "Microsoft.ContainerInstance/containerGroups"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "[parameters('subnet2Name')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnet2AddressPrefix')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[variables('networkProfileName')]",
+            "type": "Microsoft.Network/networkProfiles",
+            "apiVersion": "2020-05-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            ],
+            "properties": {
+                "containerNetworkInterfaceConfigurations": [
+                    {
+                        "name": "[variables('interfaceConfigName')]",
+                        "properties": {
+                            "ipConfigurations": [
+                                {
+                                    "name": "[variables('interfaceIpConfig')]",
+                                    "properties": {
+                                        "subnet": {
+                                            "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnet1Name'))]"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[variables('metricsAndDBContainerGroupName')]",
+            "type": "Microsoft.ContainerInstance/containerGroups",
+            "apiVersion": "2019-12-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+                "[resourceId('Microsoft.Network/networkProfiles/', variables('networkProfileName'))]"
+            ],
+            "properties": {
+                "sku": "[variables('sku')]",
+                "containers": [
+                    {
+                        "name": "indy-node-monitor",
+                        "properties": {
+                            "image": "findytestmonitor.azurecr.io/indy-node-monitor:latest",
+                            "command": [
+                                "bash",
+                                "-c",
+                                "python main.py --web --verbose"
+                            ],
+                            "ports": [
+                                {
+                                    "protocol": "TCP",
+                                    "port": 8080
+                                }
+                            ],
+                            "environmentVariables": [],
+                            "resources": {
+                                "requests": {
+                                    "memoryInGB": "[variables('memoryInGB')]",
+                                    "cpu": "[variables('cpu')]"
+                                }
+                            },
+                            "volumeMounts": [
+                                {
+                                    "name": "indy-node-monitor-plugins",
+                                    "mountPath": "/home/indy/plugins"
+                                },
+                                {
+                                    "name": "indy-node-monitor-conf",
+                                    "mountPath": "/home/indy/conf"
+                                },
+                                {
+                                    "name": "indy-node-monitor-logs",
+                                    "mountPath": "/home/indy/logs"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "influxdb",
+                        "properties": {
+                            "image": "influxdb:1.8",
+                            "ports": [
+                                {
+                                    "protocol": "TCP",
+                                    "port": 8086
+                                },
+                                {
+                                    "protocol": "TCP",
+                                    "port": 8082
+                                },
+                                {
+                                    "protocol": "UDP",
+                                    "port": 8089
+                                }
+                            ],
+                            "environmentVariables": [],
+                            "resources": {
+                                "requests": {
+                                    "memoryInGB": "[variables('memoryInGB')]",
+                                    "cpu": "[variables('cpu')]"
+                                }
+                            },
+                            "volumeMounts": [
+                                {
+                                    "name": "influxdb-provisioning",
+                                    "mountPath": "/etc/influxdb"
+                                },
+                                {
+                                    "name": "influxdb-data",
+                                    "mountPath": "/var/lib/influxdb"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "telegraf",
+                        "properties": {
+                            "image": "telegraf:latest",
+                            "ports": [
+                                {
+                                    "protocol": "TCP",
+                                    "port": 9273
+                                }
+                            ],
+                            "environmentVariables": [
+                                {
+                                    "name": "HOSTNAME",
+                                    "value": "telegraf"
+                                },
+                                {
+                                    "name": "FINDY_SEED",
+                                    "value": "[parameters('findySeed')]"
+                                }
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "memoryInGB": "[variables('memoryInGB')]",
+                                    "cpu": "[variables('cpu')]"
+                                }
+                            },
+                            "volumeMounts": [
+                                {
+                                    "name": "telegraf",
+                                    "mountPath": "/etc/telegraf"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "ipAddress": {
+                    "ports": [
+                        {
+                            "protocol": "TCP",
+                            "port": 9273
+                        },
+                        {
+                            "protocol": "TCP",
+                            "port": 8086
+                        },
+                        {
+                            "protocol": "TCP",
+                            "port": 8082
+                        },
+                        {
+                            "protocol": "UDP",
+                            "port": 8089
+                        },
+                        {
+                            "protocol": "TCP",
+                            "port": 8080
+                        }
+                    ],
+                    "ip": "[parameters('metricsAndDBContainerIp')]",
+                    "type": "Private"
+                },
+                "volumes": [
+                    {
+                        "name": "telegraf",
+                        "azureFile": {
+                            "shareName": "telegraf",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "influxdb-provisioning",
+                        "azureFile": {
+                            "shareName": "influxdb/config",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "influxdb-data",
+                        "azureFile": {
+                            "shareName": "influxdb/data",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "indy-node-monitor-plugins",
+                        "azureFile": {
+                            "shareName": "fetch-validator-status/plugins",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "indy-node-monitor-conf",
+                        "azureFile": {
+                            "shareName": "fetch-validator-status/conf",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "indy-node-monitor-logs",
+                        "azureFile": {
+                            "shareName": "fetch-validator-status/logs",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    }
+                ],
+                "networkProfile": {
+                    "Id": "[resourceId('Microsoft.Network/networkProfiles', variables('networkProfileName'))]"
+                },
+                "imageRegistryCredentials": [
+                    {
+                        "server": "[parameters('imageRegistryLoginServer')]",
+                        "username": "[parameters('imageUsername')]",
+                        "password": "[parameters('imagePassword')]"
+                    }
+                ],
+                "restartPolicy": "OnFailure",
+                "osType": "Linux"
+            }
+        },
+        {
+            "name": "[variables('prometheusContainerGroupName')]",
+            "type": "Microsoft.ContainerInstance/containerGroups",
+            "apiVersion": "2019-12-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerInstance/containerGroups/', variables('metricsAndDBContainerGroupName'))]",
+                "[resourceId('Microsoft.Network/networkProfiles/', variables('networkProfileName'))]"
+            ],
+            "properties": {
+                "sku": "[variables('sku')]",
+                "containers": [
+                    {
+                        "name": "prometheus",
+                        "properties": {
+                            "image": "prom/prometheus",
+                            "command": [
+                                "/bin/sh",
+                                "-c",
+                                "prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/etc/prometheus/prometheus_data --web.console.libraries=l/console_libraries --web.console.templates=/usr/share/prometheus/consoles"
+                            ],
+                            "ports": [
+                                {
+                                    "protocol": "TCP",
+                                    "port": 9090
+                                }
+                            ],
+                            "environmentVariables": [],
+                            "resources": {
+                                "requests": {
+                                    "memoryInGB": "[variables('memoryInGB')]",
+                                    "cpu": "[variables('cpu')]"
+                                }
+                            },
+                            "volumeMounts": [
+                                {
+                                    "name": "prometheus",
+                                    "mountPath": "/etc/prometheus"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "alertmanager",
+                        "properties": {
+                            "image": "prom/alertmanager",
+                            "command": [
+                                "/bin/sh",
+                                "-c",
+                                "alertmanager --config.file=/etc/alertmanager/config.yml --storage.path=/etc/alertmanager/data"
+                            ],
+                            "ports": [
+                                {
+                                    "protocol": "TCP",
+                                    "port": 9093
+                                }
+                            ],
+                            "environmentVariables": [],
+                            "resources": {
+                                "requests": {
+                                    "memoryInGB": "[variables('memoryInGB')]",
+                                    "cpu": "[variables('cpu')]"
+                                }
+                            },
+                            "volumeMounts": [
+                                {
+                                    "name": "alertmanager",
+                                    "mountPath": "/etc/alertmanager"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "ipAddress": {
+                    "ports": [
+                        {
+                            "protocol": "TCP",
+                            "port": 9090
+                        },
+                        {
+                            "protocol": "TCP",
+                            "port": 9093
+                        }
+                    ],
+                    "ip": "[parameters('prometheusContainerIp')]",
+                    "type": "Private"
+                },
+                "volumes": [
+                    {
+                        "name": "prometheus",
+                        "azureFile": {
+                            "shareName": "prometheus",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "alertmanager",
+                        "azureFile": {
+                            "shareName": "alertmanager",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    }
+                ],
+                "networkProfile": {
+                    "Id": "[resourceId('Microsoft.Network/networkProfiles', variables('networkProfileName'))]"
+                },
+                "restartPolicy": "OnFailure",
+                "osType": "Linux"
+            }
+        },
+        {
+            "name": "[variables('grafanaContainerGroupName')]",
+            "type": "Microsoft.ContainerInstance/containerGroups",
+            "apiVersion": "2019-12-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerInstance/containerGroups/', variables('metricsAndDBContainerGroupName'))]",
+                "[resourceId('Microsoft.ContainerInstance/containerGroups/', variables('prometheusContainerGroupName'))]",
+                "[resourceId('Microsoft.Network/networkProfiles/', variables('networkProfileName'))]"
+            ],
+            "properties": {
+                "sku": "[variables('sku')]",
+                "containers": [
+                    {
+                        "name": "grafana",
+                        "properties": {
+                            "image": "findytestmonitor.azurecr.io/grafana:latest",
+                            "ports": [
+                                {
+                                    "protocol": "TCP",
+                                    "port": 3000
+                                }
+                            ],
+                            "environmentVariables": [
+                                {
+                                    "name": "GF_SECURITY_ADMIN_PASSWORD",
+                                    "value": "[parameters('gfSecurityAdminPassword')]"
+                                },
+                                {
+                                    "name": "GF_USERS_ALLOW_SIGN_UP",
+                                    "value": "[parameters('gfUserAllowSignUp')]"
+                                },
+                                {
+                                    "name": "INFLUX_DB_FLUX_TOKEN",
+                                    "value": "[parameters('influxDBToken')]"
+                                },
+                                {
+                                    "name": "GF_FEATURE_TOGGLES_ENABLE",
+                                    "value": "publicDashboards"
+                                }
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "memoryInGB": "[variables('memoryInGB')]",
+                                    "cpu": "[variables('cpu')]"
+                                }
+                            },
+                            "volumeMounts": [
+                                {
+                                    "name": "grafana-provisioning",
+                                    "mountPath": "/etc/grafana/provisioning"
+                                },
+                                {
+                                    "name": "grafana-data",
+                                    "mountPath": "/var/lib/grafana"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "ipAddress": {
+                    "ports": [
+                        {
+                            "protocol": "TCP",
+                            "port": 3000
+                        }
+                    ],
+                    "ip": "[parameters('grafanaContainerIp')]",
+                    "type": "Private"
+                },
+                "volumes": [
+                    {
+                        "name": "grafana-provisioning",
+                        "azureFile": {
+                            "shareName": "grafana/provisioning",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "grafana-data",
+                        "azureFile": {
+                            "shareName": "grafana/grafana_data",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    }
+                ],
+                "networkProfile": {
+                    "Id": "[resourceId('Microsoft.Network/networkProfiles', variables('networkProfileName'))]"
+                },
+                "imageRegistryCredentials": [
+                    {
+                        "server": "[parameters('imageRegistryLoginServer')]",
+                        "username": "[parameters('imageUsername')]",
+                        "password": "[parameters('imagePassword')]"
+                    }
+                ],
+                "restartPolicy": "OnFailure",
+                "osType": "Linux"
+            }
+        },
+        {
+            "apiVersion": "2020-05-01",
+            "name": "[variables('applicationGatewayName')]",
+            "type": "Microsoft.Network/applicationGateways",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
+                "[resourceId('Microsoft.ContainerInstance/containerGroups/', variables('grafanaContainerGroupName'))]",
+                "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+            ],
+            "properties": {
+                "sku": {
+                    "name": "[variables('skuName')]",
+                    "tier": "Standard",
+                    "capacity": "[variables('capacity')]"
+                },
+                "gatewayIPConfigurations": [
+                    {
+                        "name": "appGatewayIpConfig",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnet2Ref')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendIPConfigurations": [
+                    {
+                        "name": "appGatewayFrontendIP",
+                        "properties": {
+                            "PublicIPAddress": {
+                                "id": "[variables('publicIPRef')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendPorts": [
+                    {
+                        "name": "appGatewayFrontendPort",
+                        "properties": {
+                            "Port": 3000
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "appGatewayBackendPool",
+                        "properties": {
+                            "BackendAddresses": [
+                                {
+                                    "IpAddress": "[reference(variables('grafanaContainerGroupName')).ipAddress.ip]"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "backendHttpSettingsCollection": [
+                    {
+                        "name": "appGatewayBackendHttpGrafanaSettings",
+                        "properties": {
+                            "Port": 3000,
+                            "Protocol": "Http",
+                            "CookieBasedAffinity": "Disabled"
+                        }
+                    }
+                ],
+                "httpListeners": [
+                    {
+                        "name": "appGatewayHttpListener",
+                        "properties": {
+                            "FrontendIPConfiguration": {
+                                "Id": "[resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', variables('applicationGatewayName'), 'appGatewayFrontendIP')]"
+                            },
+                            "FrontendPort": {
+                                "Id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', variables('applicationGatewayName'), 'appGatewayFrontendPort')]"
+                            },
+                            "Protocol": "Http"
+                        }
+                    }
+                ],
+                "requestRoutingRules": [
+                    {
+                        "Name": "rule",
+                        "properties": {
+                            "RuleType": "Basic",
+                            "httpListener": {
+                                "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', variables('applicationGatewayName'), 'appGatewayHttpListener')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('applicationGatewayName'), 'appGatewayBackendPool')]"
+                            },
+                            "backendHttpSettings": {
+                                "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', variables('applicationGatewayName'), 'appGatewayBackendHttpGrafanaSettings')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "SiteFQDN": {
+            "type": "string",
+            "value": "[reference(variables('publicIPRef')).dnsSettings.fqdn]"
+        }
+    }
+}

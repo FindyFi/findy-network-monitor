@@ -1,0 +1,73 @@
+name: Deploy Findy network monitor to Test Environment
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  docker_build_push_acr:
+    name: "Docker Build and Push to ACR"
+    runs-on: ubuntu-latest
+    environment: main
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      DEPLOYMENT_NAME: "FindyTestMonitor"
+      RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+      LOCATION: ${{ secrets.LOCATION }}
+      FINDY_SEED: ${{ secrets.FINDY_SEED }}
+      VNET_NAME: ${{ secrets.VNET_NAME }}
+      STORAGE_ACCOUNT_NAME: ${{ secrets.STORAGE_ACCOUNT_NAME }}
+      STORAGE_ACCOUNT_KEY: ${{ secrets.STORAGE_ACCOUNT_KEY }}
+      GF_SECURITY_ADMIN_PASSWORD: ${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
+      INFLUXDB_TOKEN: ${{ secrets.INFLUXDB_TOKEN }}
+      ACR_REGISTRY: ${{ secrets.ACR_REGISTRY }}
+      ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+      ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+
+    steps:
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: "Login to Container Registry"
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build the indy node monitor image and push it to ACR
+        uses: docker/build-push-action@v2
+        with:
+          context: ./fetch-validator-status
+          push: true
+          tags: ${{ secrets.ACR_REGISTRY }}/indy-node-monitor:latest
+          file: ./fetch-validator-status/Dockerfile
+
+      - name: Build the grafana image and push it to ACR
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          build-args: |
+            "GRAFANA_TAG=latest"
+          push: true
+          tags: ${{ secrets.ACR_REGISTRY }}/grafana:latest
+          file: ./images/grafana/Dockerfile
+
+      - name: Set up Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure
+        run: |
+          az deployment group create \
+            --name $DEPLOYMENT_NAME \
+            --resource-group $RESOURCE_GROUP \
+            --template-file FindyTestMonitor-ArmTemplate.json \
+            --parameters findySeed=$FINDY_SEED vnetName=$VNET_NAME storageAccountName=$STORAGE_ACCOUNT_NAME storageAccountKey=$STORAGE_ACCOUNT_KEY gfSecurityAdminPassword=$GF_SECURITY_ADMIN_PASSWORD influxDBToken=$INFLUXDB_TOKEN imageRegistryLoginServer=$ACR_REGISTRY imageUsername=$ACR_USERNAME imagePassword=$ACR_PASSWORD location=$LOCATION
