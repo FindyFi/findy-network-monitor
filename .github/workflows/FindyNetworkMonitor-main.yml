@@ -2,7 +2,7 @@ name: Deploy Findy network monitor to Azure
 
 on:
   push:
-    branches: [main]
+    branches: [test]
 
 jobs:
   docker_build_push_acr:
