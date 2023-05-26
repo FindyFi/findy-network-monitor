@@ -8,7 +8,7 @@ jobs:
   docker_build_push_acr:
     name: "Docker Build and Push to ACR"
     runs-on: ubuntu-latest
-    environment: main
+    environment: test
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
