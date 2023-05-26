@@ -542,7 +542,7 @@
                             "ports": [
                                 {
                                     "protocol": "TCP",
-                                    "port": 80
+                                    "port": 3000
                                 }
                             ],
                             "environmentVariables": [
@@ -572,7 +572,7 @@
                             "volumeMounts": [
                                 {
                                     "name": "grafana-provisioning",
-                                    "mountPath": "/etc/grafana"
+                                    "mountPath": "/etc/grafana/provisioning"
                                 },
                                 {
                                     "name": "grafana-data",
@@ -586,7 +586,7 @@
                     "ports": [
                         {
                             "protocol": "TCP",
-                            "port": 80
+                            "port": 3000
                         }
                     ],
                     "ip": "[parameters('grafanaContainerIp')]",
@@ -596,7 +596,7 @@
                     {
                         "name": "grafana-provisioning",
                         "azureFile": {
-                            "shareName": "grafana",
+                            "shareName": "grafana/provisioning",
                             "storageAccountName": "[parameters('storageAccountName')]",
                             "storageAccountKey": "[parameters('storageAccountKey')]"
                         }
@@ -664,7 +664,7 @@
                     {
                         "name": "appGatewayFrontendPort",
                         "properties": {
-                            "Port": 80
+                            "Port": 3000
                         }
                     }
                 ],
@@ -684,7 +684,7 @@
                     {
                         "name": "appGatewayBackendHttpGrafanaSettings",
                         "properties": {
-                            "Port": 80,
+                            "Port": 3000,
                             "Protocol": "Http",
                             "CookieBasedAffinity": "Disabled"
                         }
