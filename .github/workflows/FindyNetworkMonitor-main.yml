@@ -64,6 +64,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      # Deploy to ARM tempalte to Azure
       - name: Deploy to Azure
         run: |
           az deployment group create \
