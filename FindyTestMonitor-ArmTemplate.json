@@ -636,6 +636,13 @@
                 "networkProfile": {
                     "Id": "[resourceId('Microsoft.Network/networkProfiles', variables('networkProfileName'))]"
                 },
+                "imageRegistryCredentials": [
+                    {
+                        "server": "[parameters('imageRegistryLoginServer')]",
+                        "username": "[parameters('imageUsername')]",
+                        "password": "[parameters('imagePassword')]"
+                    }
+                ],
                 "restartPolicy": "OnFailure",
                 "osType": "Linux"
             }
