@@ -248,8 +248,8 @@
                             "environmentVariables": [],
                             "resources": {
                                 "requests": {
-                                    "memoryInGB": "[variables('memoryInGB')]",
-                                    "cpu": "[variables('cpu')]"
+                                    "memoryInGB": "0.5",
+                                    "cpu": "0.5"
                                 }
                             },
                             "volumeMounts": [
@@ -381,8 +381,8 @@
                             ],
                             "resources": {
                                 "requests": {
-                                    "memoryInGB": "[variables('memoryInGB')]",
-                                    "cpu": "[variables('cpu')]"
+                                    "memoryInGB": "0.5",
+                                    "cpu": "0.5"
                                 }
                             },
                             "volumeMounts": []
