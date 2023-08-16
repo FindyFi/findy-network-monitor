@@ -95,6 +95,26 @@
         "metricsAndDBContainerIp": {
             "defaultValue": "10.1.2.4",
             "type": "String"
+        },
+        "appID": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "appPassword": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "appTenantID": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "resourceGroup": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "dnsZoneName": {
+            "defaultValue": "findy.fi",
+            "type": "String"
         }
     },
     "variables": {
@@ -348,7 +368,7 @@
                                 },
                                 {
                                     "name": "RESOURCE_GROUP",
-                                    "value": "[parameters('RESOURCE_GROUP')]"
+                                    "value": "[parameters('resourceGroup')]"
                                 },
                                 {
                                     "name": "A_RECORD_NAME",
@@ -356,7 +376,7 @@
                                 },
                                 {
                                     "name": "DNS_ZONE_NAME",
-                                    "value": "[parameters('DNS_ZONE_NAME')]"
+                                    "value": "[parameters('dnsZoneName')]"
                                 }
                             ],
                             "resources": {
