@@ -390,11 +390,81 @@
                     }
                 ],
                 "ipAddress": {
-                    "ports": [],
+                    "ports": [
+                        {
+                            "protocol": "TCP",
+                            "port": 9273
+                        },
+                        {
+                            "protocol": "TCP",
+                            "port": 8086
+                        },
+                        {
+                            "protocol": "TCP",
+                            "port": 8082
+                        },
+                        {
+                            "protocol": "UDP",
+                            "port": 8089
+                        },
+                        {
+                            "protocol": "TCP",
+                            "port": 8080
+                        }
+                    ],
                     "ip": "[parameters('metricsAndDBContainerIp')]",
                     "type": "Private"
                 },
-                "volumes": [],
+                "volumes": [
+                    {
+                        "name": "telegraf",
+                        "azureFile": {
+                            "shareName": "telegraf",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "influxdb-provisioning",
+                        "azureFile": {
+                            "shareName": "influxdb/config",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "influxdb-data",
+                        "azureFile": {
+                            "shareName": "influxdb/data",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "indy-node-monitor-plugins",
+                        "azureFile": {
+                            "shareName": "fetch-validator-status/plugins",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "indy-node-monitor-conf",
+                        "azureFile": {
+                            "shareName": "fetch-validator-status/conf",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    },
+                    {
+                        "name": "indy-node-monitor-logs",
+                        "azureFile": {
+                            "shareName": "fetch-validator-status/logs",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[parameters('storageAccountKey')]"
+                        }
+                    }
+                ],
                 "networkProfile": {
                     "Id": "[resourceId('Microsoft.Network/networkProfiles', variables('networkProfileName'))]"
                 },
