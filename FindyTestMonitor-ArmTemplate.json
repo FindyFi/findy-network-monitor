@@ -318,84 +318,63 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "name": "dns-sidecar",
+                        "properties": {
+                            "image": "findytestmonitor.azurecr.io/dns-sidecar:latest",
+                            "command": [
+                                "bash",
+                                "-c",
+                                "./az_cli.sh"
+                            ],
+                            "ports": [],
+                            "environmentVariables": [
+                                {
+                                    "name": "APP_ID",
+                                    "value": "[parameters('appID')]"
+                                },
+                                {
+                                    "name": "APP_PASSWORD",
+                                    "value": "[parameters('appPassword')]"
+                                },
+                                {
+                                    "name": "APP_TENANT_ID",
+                                    "value": "[parameters('appTenantID')]"
+                                },
+                                {
+                                    "name": "ACI_INSTANCE_NAME",
+                                    "value": "dns-sidecar"
+                                },
+                                {
+                                    "name": "RESOURCE_GROUP",
+                                    "value": "[parameters('RESOURCE_GROUP')]"
+                                },
+                                {
+                                    "name": "A_RECORD_NAME",
+                                    "value": "servicedb"
+                                },
+                                {
+                                    "name": "DNS_ZONE_NAME",
+                                    "value": "[parameters('DNS_ZONE_NAME')]"
+                                }
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "memoryInGB": "0.5",
+                                    "cpu": "0.5"
+                                }
+                            },
+                            "volumeMounts": []
+                        }
                     }
                 ],
                 "ipAddress": {
-                    "ports": [
-                        {
-                            "protocol": "TCP",
-                            "port": 9273
-                        },
-                        {
-                            "protocol": "TCP",
-                            "port": 8086
-                        },
-                        {
-                            "protocol": "TCP",
-                            "port": 8082
-                        },
-                        {
-                            "protocol": "UDP",
-                            "port": 8089
-                        },
-                        {
-                            "protocol": "TCP",
-                            "port": 8080
-                        }
-                    ],
+                    "ports": [],
                     "ip": "[parameters('metricsAndDBContainerIp')]",
                     "type": "Private"
                 },
-                "volumes": [
-                    {
-                        "name": "telegraf",
-                        "azureFile": {
-                            "shareName": "telegraf",
-                            "storageAccountName": "[parameters('storageAccountName')]",
-                            "storageAccountKey": "[parameters('storageAccountKey')]"
-                        }
-                    },
-                    {
-                        "name": "influxdb-provisioning",
-                        "azureFile": {
-                            "shareName": "influxdb/config",
-                            "storageAccountName": "[parameters('storageAccountName')]",
-                            "storageAccountKey": "[parameters('storageAccountKey')]"
-                        }
-                    },
-                    {
-                        "name": "influxdb-data",
-                        "azureFile": {
-                            "shareName": "influxdb/data",
-                            "storageAccountName": "[parameters('storageAccountName')]",
-                            "storageAccountKey": "[parameters('storageAccountKey')]"
-                        }
-                    },
-                    {
-                        "name": "indy-node-monitor-plugins",
-                        "azureFile": {
-                            "shareName": "fetch-validator-status/plugins",
-                            "storageAccountName": "[parameters('storageAccountName')]",
-                            "storageAccountKey": "[parameters('storageAccountKey')]"
-                        }
-                    },
-                    {
-                        "name": "indy-node-monitor-conf",
-                        "azureFile": {
-                            "shareName": "fetch-validator-status/conf",
-                            "storageAccountName": "[parameters('storageAccountName')]",
-                            "storageAccountKey": "[parameters('storageAccountKey')]"
-                        }
-                    },
-                    {
-                        "name": "indy-node-monitor-logs",
-                        "azureFile": {
-                            "shareName": "fetch-validator-status/logs",
-                            "storageAccountName": "[parameters('storageAccountName')]",
-                            "storageAccountKey": "[parameters('storageAccountKey')]"
-                        }
-                    }
-                ],
+                "volumes": [],
                 "networkProfile": {
                     "Id": "[resourceId('Microsoft.Network/networkProfiles', variables('networkProfileName'))]"
                 },
