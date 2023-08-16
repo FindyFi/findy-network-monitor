@@ -74,4 +74,4 @@ jobs:
             --name $DEPLOYMENT_NAME \
             --resource-group $RESOURCE_GROUP \
             --template-file FindyTestMonitor-ArmTemplate.json \
-            --parameters findySeed=$FINDY_SEED vnetName=$VNET_NAME storageAccountName=$STORAGE_ACCOUNT_NAME storageAccountKey=$STORAGE_ACCOUNT_KEY gfSecurityAdminPassword=$GF_SECURITY_ADMIN_PASSWORD influxDBToken=$INFLUXDB_TOKEN imageRegistryLoginServer=$ACR_REGISTRY imageUsername=$ACR_USERNAME imagePassword=$ACR_PASSWORD location=$LOCATION appID=$HELPER_APP_ID appPassword=$HELPER_APP_PASSWORD appTenantId=$HELPER_APP_TENANT_ID resourceGroup=$RESOURCE_GROUP
+            --parameters findySeed=$FINDY_SEED vnetName=$VNET_NAME storageAccountName=$STORAGE_ACCOUNT_NAME storageAccountKey=$STORAGE_ACCOUNT_KEY gfSecurityAdminPassword=$GF_SECURITY_ADMIN_PASSWORD influxDBToken=$INFLUXDB_TOKEN imageRegistryLoginServer=$ACR_REGISTRY imageUsername=$ACR_USERNAME imagePassword=$ACR_PASSWORD location=$LOCATION appID=$HELPER_APP_ID appPassword=$HELPER_APP_PASSWORD appTenantID=$HELPER_APP_TENANT_ID resourceGroup=$RESOURCE_GROUP
