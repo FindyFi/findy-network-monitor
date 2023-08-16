@@ -364,7 +364,7 @@
                                 },
                                 {
                                     "name": "ACI_INSTANCE_NAME",
-                                    "value": "dns-sidecar"
+                                    "value": "[variables('metricsAndDBContainerGroupName')]"
                                 },
                                 {
                                     "name": "RESOURCE_GROUP",
@@ -372,7 +372,7 @@
                                 },
                                 {
                                     "name": "A_RECORD_NAME",
-                                    "value": "servicedb"
+                                    "value": "service-db"
                                 },
                                 {
                                     "name": "DNS_ZONE_NAME",
