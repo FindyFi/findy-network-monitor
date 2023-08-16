@@ -332,15 +332,15 @@
                             "environmentVariables": [
                                 {
                                     "name": "APP_ID",
-                                    "value": "[parameters('APP_ID')]"
+                                    "value": "[parameters('appID')]"
                                 },
                                 {
                                     "name": "APP_PASSWORD",
-                                    "value": "[parameters('APP_PASSWORD')]"
+                                    "value": "[parameters('appPassword')]"
                                 },
                                 {
                                     "name": "APP_TENANT_ID",
-                                    "value": "[parameters('APP_TENANT_ID')]"
+                                    "value": "[parameters('appTenantID')]"
                                 },
                                 {
                                     "name": "ACI_INSTANCE_NAME",
